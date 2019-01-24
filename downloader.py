@@ -19,14 +19,24 @@ class VolaDL(object):
         self.cookies = config.COOKIES
         self.room = args[0]
         self.password = args[1]
+        if args[2] is None:
+            self.downloader = config.DOWNLOADER
+        else:
+            self.downloader = args[2]
+        if args[3] is None:
+            self.logger = config.LOGGER
+        else:
+            self.logger = args[3]
+
         self.alive = True
 
         self.download_all = config.DOWNLOAD_ALL_ON_ROOM_ENTER
         self.duplicate = not config.ALLOW_DUPLICATES
-        self.continue_running = config.CONTINUE_DOWNLOADING_NEW_FILES
+        self.continue_running = config.CONTINUE_RUNNING
         self.max_file_size = config.MAXIMUM_FILE_SIZE
 
-        self.path = config.DOWNLOAD_PATH + self.room
+        self.download_path = config.DOWNLOAD_PATH + self.room
+        self.log_path = config.LOG_PATH + self.room
         self.refresh_time = datetime.now() + timedelta(days=1)
         self.counter = 1
         self.user_whitelist = []
@@ -46,31 +56,73 @@ class VolaDL(object):
 
     def dl(self):
         """Main method that gets called at the start"""
+
         def onfile(f):
             """Listener on new files in the room"""
             url = f.url
             uploader = f.uploader
             file_size = '{0:.4f}'.format(f.size / 1048576)
-            print('URL : {} - UPLOADER: {} - FILESIZE: {} MB'.format(url, uploader, file_size))
-            if not uploader == 'zipbot':
+            print('### NEW FILE - URL : {} - UPLOADER: {} - FILESIZE: {} MB'.format(url, uploader, file_size))
+            if not self.max_file_size == -1 and f.size / 1048576 >= self.max_file_size:
+                print('File is too big to download.')
+            elif self.file_check(f):
                 self.single_file_download(url, uploader)
+            else:
+                print('File got filtered out.')
+
+        def ontime(t):
+            """React to time events emitted by volafile socket connection, used for maintenance"""
             if datetime.now() > self.refresh_time:
                 # if the refresh_time is now -> close the bot
                 self.close()
+            # check for connections
+            if self.listen:
+                if not self.listen.connected:
+                    self.close()
+            return t
+
+        def onmessage(m):
+            """React to and log chat messages"""
+            self.log_room(m)
 
         if self.alive:
-            if self.download_all:
+            if self.download_all and self.downloader:
                 print("Downloading room on enter")
                 duplicate_temp = self.duplicate
                 self.duplicate = True
                 self.download_room()
                 self.duplicate = duplicate_temp
             if self.continue_running:
-                self.listen.add_listener("file", onfile)
+                if self.downloader:
+                    self.listen.add_listener("file", onfile)
+                if self.logger:
+                    self.listen.add_listener("chat", onmessage)
+                self.listen.add_listener("time", ontime)
                 self.listen.listen()
             else:
                 global kill
                 kill = True
+
+    def log_room(self, msg):
+        if msg.nick == 'News':
+            return False
+        time_now = datetime.now()
+        prefix = VolaDL.prefix(msg)
+        if os.path.exists(self.log_path):
+            temp_path = self.log_path + '/'
+        else:
+            temp_path = VolaDL.create_folder(self.log_path)
+        file_name = time_now.strftime("[%Y-%m-%d]") + "[" + self.room + "].txt"
+        path = str(temp_path) + str(file_name)
+        if not os.path.isfile(path):
+            fl = open(path, "w+")
+        else:
+            fl = open(path, "a")
+
+        log_msg = '[{}][{}][{}][{}]\n'.format(str(time_now.strftime("%Y-%m-%d--%H:%M:%S")), prefix, msg.nick, str(msg))
+        print("### Writing to log: " + log_msg[0:-1])
+        fl.write(log_msg)
+        fl.close
 
     def download_room(self):
         """Download the whole room on enter"""
@@ -88,7 +140,8 @@ class VolaDL(object):
                 self.single_file_download(url, uploader)
             else:
                 print('File got filtered out.')
-        print('### ### ###\nDownloading the room has been finished, leave this running to download new files or quit.')
+        print('### ### ###')
+        print('Downloading the room has been finished, leave this running to download new files/log or quit.')
         print('### ### ###')
 
     def download_file(self, url, file_name=None):
@@ -113,10 +166,10 @@ class VolaDL(object):
     def single_file_download(self, url, upl):
         """Prepares a single file from vola for download"""
         url = url.replace(" ", "")
-        if os.path.exists(self.path + '/' + upl):
-            temp_path = self.path + '/' + upl + '/'
+        if os.path.exists(self.download_path + '/' + upl):
+            temp_path = self.download_path + '/' + upl + '/'
         else:
-            temp_path = VolaDL.create_folder(self.path + '/' + upl)
+            temp_path = VolaDL.create_folder(self.download_path + '/' + upl)
 
         url_split = url.split('/')
         file_split = str(url_split[-1]).split('.')
@@ -135,11 +188,11 @@ class VolaDL(object):
     def config_check(self):
         """Checks filter configs for validity and prepares them for filtering"""
         if (config.USE_USER_BLACKLIST and config.USE_USER_WHITELIST) or (
-                    config.USE_FILENAME_BLACKLIST and config.USE_FILENAME_WHITELIST) or (
-                           config.USE_FILETYPE_BLACKLIST and config.USE_FILETYPE_WHITELIST):
+                config.USE_FILENAME_BLACKLIST and config.USE_FILENAME_WHITELIST) or (
+                config.USE_FILETYPE_BLACKLIST and config.USE_FILETYPE_WHITELIST):
             return (config.USE_USER_BLACKLIST and config.USE_USER_WHITELIST) or (
-                        config.USE_FILENAME_BLACKLIST and config.USE_FILENAME_WHITELIST) or (
-                               config.USE_FILETYPE_BLACKLIST and config.USE_FILETYPE_WHITELIST)
+                    config.USE_FILENAME_BLACKLIST and config.USE_FILENAME_WHITELIST) or (
+                           config.USE_FILETYPE_BLACKLIST and config.USE_FILETYPE_WHITELIST)
         else:
             if config.USE_USER_BLACKLIST:
                 self.user_blacklist = config.USER_BLACKLIST
@@ -242,6 +295,14 @@ class VolaDL(object):
             self.cookies = {**self.cookies, **cookies_dict}
             return r
 
+    def close(self):
+        """only closes the current session, afterwards the downloader reconnects"""
+        print("Closing current instance")
+        self.alive = False
+        self.listen.close()
+        del self.listen
+        return ""
+
     @staticmethod
     def create_folder(new_folder):
         """creates a new folder"""
@@ -260,14 +321,20 @@ class VolaDL(object):
         """returns an id"""
         return ''.join(random.choice(chars) for _ in range(size))
 
-    def close(self):
-        """only closes the current session, afterwards the bot reconnects"""
-        print("Closing current instance")
-        self.alive = False
-        self.listen.close()
-        del self.listen
-
-        return ""
+    @staticmethod
+    def prefix(msg):
+        prefix = ''
+        if msg.purple:
+            prefix += "@"
+        if msg.owner:
+            prefix += "$"
+        if msg.janitor:
+            prefix += "~"
+        if msg.green:
+            prefix += "+"
+        if msg.system:
+            prefix += "%"
+        return prefix
 
 
 def parse_args():
@@ -281,7 +348,12 @@ def parse_args():
     parser.add_argument('--passwd', '-p', dest='passwd', type=str,
                         default="*",
                         help='Room password to enter the room.')
-
+    parser.add_argument('--downloader', '-d', dest='downloader', type=str,
+                        default="None",
+                        help='Do you want to download files -> [True/False]')
+    parser.add_argument('--logger', '-l', dest='logger', type=str,
+                        default="None",
+                        help='Do you want to log the room -> [True/False]')
     return parser.parse_args()
 
 
@@ -289,17 +361,29 @@ def main():
     """Main method"""
     global kill
     args = parse_args()
+    if args.downloader == "True":
+        downloader = True
+    elif args.downloader == "False":
+        downloader = False
+    else:
+        downloader = None
+    if args.logger == "True":
+        logger = True
+    elif args.logger == "False":
+        logger = False
+    else:
+        logger = None
 
-    lister = [args.room, args.passwd]
+    lister = [args.room, args.passwd, downloader, logger]
     while not kill:
         v = VolaDL(lister)
         v.dl()
 
 
-def main_callable(room, passwd='*'):
+def main_callable(room, passwd='*', downloader=None, logger=None):
     """Callable main method with arguments"""
     global kill
-    lister = [room, passwd]
+    lister = [room, passwd, downloader, logger]
     while not kill:
         v = VolaDL(lister)
         v.dl()

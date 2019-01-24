@@ -1,13 +1,17 @@
 # #### CONFIG VARIABLES
+# Does the downloader start -> True/False (can be overwritten in start command)
+DOWNLOADER = True
+
 # Configure a path on your system to put the downloaded files. The files will get sorted by room and uploader.
 # Make sure this path exists beforehand
-DOWNLOAD_PATH = './'
+DOWNLOAD_PATH = './downloads/'
 
 # When starting the script the whole room gets downloaded -> True/False
 DOWNLOAD_ALL_ON_ROOM_ENTER = True
 
-# After entering the room downloader remains running and downloads new files when they get uploaded -> True/False
-CONTINUE_DOWNLOADING_NEW_FILES = True
+# After entering the room downloader remains running and downloads new files when they get uploaded
+# Needed for logging as well -> True/False
+CONTINUE_RUNNING = True
 
 # When this is True files from the same user with the same filename get downloaded with an altered
 # filename -> True/False
@@ -20,6 +24,13 @@ VOLAFILE_USER_PASSWORD = ''
 
 # Maximum allowed size to download in MB -> unlimited if -1
 MAXIMUM_FILE_SIZE = -1
+
+# Does the chat logger start -> True/False (can be overwritten in start command)
+LOGGER = True
+
+# Configure a path on your system to put the room chat logs. The files will get sorted by room.
+# Make sure this path exists beforehand
+LOG_PATH = './logs/'
 
 # #### FILTERING OPTIONS
 # All filters get stored as strings in lists. You can only use either a white- or a blacklist from each filter.
