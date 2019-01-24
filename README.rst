@@ -5,7 +5,7 @@ Python Volafile Downloader
 Tool for downloading from volafile.org rooms via volapi_. (Currently the downloader is working on volapi 5.14.0)
 
 .. _volapi: https://github.com/volafiled/python-volapi
-This downloader does not use webdrivers and selenium like this volafile-downloader_ and instead uses a websocket connection over the API, which makes this implementation a lot more light-weight.
+This downloader does not use webdrivers and selenium like volafile-downloader_ and instead uses a websocket connection over the API, which makes this implementation a lot more light-weight.
 
 The downloader allows for blacklists/whitelists for uploaders, filename-search and filetypes.
 
