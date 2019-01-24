@@ -45,4 +45,5 @@ Other
 ------------
 If you have any issues/questions just post a new issue. Otherwise feel fre to share, improve, use and make it your own.
 For more examples of how to use the python-volapi and what you can do with it you can look at my volazipbot_.
+
 .. _volazipbot: https://github.com/kadranel/volazipbot
