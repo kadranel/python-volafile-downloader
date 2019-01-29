@@ -50,7 +50,7 @@ class VolaDL(object):
             self.alive = False
             global kill
             kill = True
-            print('### YOU CAN NOT A USE BLACK- AND WHITELIST FOR THE SAME FILTER.')
+            print('### YOU CAN NOT USE A BLACKLIST AND A WHITELIST FOR THE SAME FILTER.')
         else:
             self.listen = self.create_room()
 
@@ -86,6 +86,8 @@ class VolaDL(object):
             self.log_room(m)
 
         if self.alive:
+            global kill
+
             if self.download_all and self.downloader:
                 print("Downloading room on enter")
                 duplicate_temp = self.duplicate
@@ -97,14 +99,17 @@ class VolaDL(object):
                     self.listen.add_listener("file", onfile)
                 if self.logger:
                     self.listen.add_listener("chat", onmessage)
-                self.listen.add_listener("time", ontime)
-                self.listen.listen()
+                if self.downloader or self.logger:
+                    self.listen.add_listener("time", ontime)
+                    self.listen.listen()
+                else:
+                    print('### You need to activate either LOGGER or DOWNLOADER for the bot to continue running')
+                    kill = True
             else:
-                global kill
                 kill = True
 
     def log_room(self, msg):
-        if msg.nick == 'News':
+        if msg.nick == 'News' and msg.system:
             return False
         time_now = datetime.now()
         prefix = VolaDL.prefix(msg)
