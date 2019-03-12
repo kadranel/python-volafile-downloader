@@ -170,7 +170,6 @@ class VolaDL(object):
 
     def single_file_download(self, url, upl):
         """Prepares a single file from vola for download"""
-        url = url.replace(" ", "")
         if os.path.exists(self.download_path + '/' + upl):
             temp_path = self.download_path + '/' + upl + '/'
         else:
