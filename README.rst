@@ -18,7 +18,7 @@ Installation
   a) Python 3.7
   b) pip
 1) How to install
-  a) Download the newest release of the downloader at https://github.com/kadranel/python-volafile-downloader/archive/1.1.1.zip or git clone this repository.
+  a) Download the newest release of the downloader at https://github.com/kadranel/python-volafile-downloader/archive/1.1.2.zip or git clone this repository.
   b) Unzip and enter the folder with you favourite shell, then type:
 ::
 
