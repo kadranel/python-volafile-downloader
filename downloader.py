@@ -75,6 +75,7 @@ class VolaDL(object):
             if datetime.now() > self.refresh_time:
                 # if the refresh_time is now -> close the bot
                 self.close()
+                return t
             # check for connections
             if self.listen:
                 if not self.listen.connected:
