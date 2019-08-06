@@ -46,6 +46,3 @@ Example: You want to download all files from https://volafile.org/r/n7yc3pgw
 Other
 ------------
 If you have any issues/questions just post a new issue. Otherwise feel free to share, improve, use and make it your own.
-For more examples of how to use the python-volapi and what you can do with it you can look at my volazipbot_.
-
-.. _volazipbot: https://github.com/kadranel/volazipbot
