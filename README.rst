@@ -2,7 +2,7 @@
 Python Volafile Downloader
 =====================
 
-Tool for downloading from volafile.org rooms via volapi_. (Currently the downloader is working on volapi 5.16.0)
+Tool for downloading from volafile.org rooms via volapi_. (Currently the downloader is working on volapi 5.17.0)
 
 .. _volapi: https://github.com/volafiled/python-volapi
 This downloader does not use webdrivers and selenium like volafile-downloader_ and instead uses a websocket connection over the API, which makes this implementation a lot more light-weight.
@@ -18,7 +18,7 @@ Installation
   a) Python 3.7
   b) pip
 1) How to install
-  a) Download the newest release of the downloader at https://github.com/kadranel/python-volafile-downloader/archive/1.1.4.zip or git clone this repository.
+  a) Download the newest release of the downloader at https://github.com/kadranel/python-volafile-downloader/archive/1.1.5.zip or git clone this repository.
   b) Unzip and enter the folder with you favourite shell, then type:
 ::
 
